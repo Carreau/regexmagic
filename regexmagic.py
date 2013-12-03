@@ -19,23 +19,29 @@ Note: IPython presently interprets {x} to mean 'expand variable x', so
 # https://github.com/gvwilson/regexmagic/blob/master/LICENSE
 
 import re
-from IPython.core.magic import Magics, magics_class, cell_magic
+from IPython.core.magic import Magics, magics_class, line_magic, cell_magic, line_cell_magic
 from IPython.display import display, HTML
 
 MATCH_TEMPL = '<font color="{0}"><u>{1}</u></font>'
-PATTERN_TEMPL = '<font color="green"><strong>{0}</strong></font>\n'
-
+NOMATCH_TEMPL = '<font color="gray">{0}</font>'
+PATTERN_TEMPL = '<font color="purple"><strong><em>{0}</em></strong></font>\n'
 
 @magics_class
 class RegexMagic(Magics):
     '''Provide the 'regex' calling point for the magic, and keep track of
     alternating colors while matching.'''
 
-    this_color, next_color = 'red', 'blue'
+    @line_magic
+    def matchfile(self, line, cell=None):
+        filename, pattern = [x.strip() for x in line.split(' ', 1)]
+        with open(filename, 'r') as reader:
+            text = reader.read()
+        self.matchlines(pattern, text)
 
     @cell_magic
-    def regex(self, pattern, text):
+    def matchlines(self, pattern, text):
         pattern_str = PATTERN_TEMPL.format(pattern)
+        self.this_color, self.next_color = 'DarkGreen', 'DarkRed'
         result_str = [self.handle_line(pattern, line) for line in text.split('\n')]
         display(HTML(pattern_str + '\n'.join(result_str)))
 
@@ -48,9 +54,10 @@ class RegexMagic(Magics):
             self.this_color, self.next_color = self.next_color, self.this_color
             line = line[m.end():]
             m = re.search(pattern, line)
+        else:
+            line = NOMATCH_TEMPL.format(line)
         result.append(line)
         return '<br/>{0}'.format(''.join(result))
-
 
 def load_ipython_extension(ipython):
     ipython.register_magics(RegexMagic)
