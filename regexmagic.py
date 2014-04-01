@@ -24,7 +24,7 @@ from IPython.display import display, HTML
 
 MATCH_TEMPL = '<font color="{0}"><u>{1}</u></font>'
 NOMATCH_TEMPL = '<font color="gray">{0}</font>'
-PATTERN_TEMPL = '<font color="purple"><strong><em>{0}</em></strong></font>\n'
+PATTERN_TEMPL = '<font color="DarkRed"><strong><em>{0}</em></strong></font><br/>\n'
 
 @magics_class
 class RegexMagic(Magics):
@@ -41,23 +41,23 @@ class RegexMagic(Magics):
     @cell_magic
     def matchlines(self, pattern, text):
         pattern_str = PATTERN_TEMPL.format(pattern)
-        self.this_color, self.next_color = 'DarkGreen', 'DarkRed'
+        self.this_color, self.next_color = 'DarkGreen', 'DarkBlue'
         result_str = [self.handle_line(pattern, line) for line in text.split('\n')]
-        display(HTML(pattern_str + '\n'.join(result_str)))
+        display(HTML(pattern_str + '<br/>'.join(result_str)))
 
     def handle_line(self, pattern, line):
         result = []
         m = re.search(pattern, line)
         while m:
-            result.append(line[:m.start()])
+            result.append(NOMATCH_TEMPL.format(line[:m.start()]))
             result.append(MATCH_TEMPL.format(self.this_color, line[m.start():m.end()]))
-            self.this_color, self.next_color = self.next_color, self.this_color
             line = line[m.end():]
+            self.this_color, self.next_color = self.next_color, self.this_color
             m = re.search(pattern, line)
         else:
             line = NOMATCH_TEMPL.format(line)
         result.append(line)
-        return '<br/>{0}'.format(''.join(result))
+        return ''.join(result)
 
 def load_ipython_extension(ipython):
     ipython.register_magics(RegexMagic)
