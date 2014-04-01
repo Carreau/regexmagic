@@ -22,14 +22,16 @@ import re
 from IPython.core.magic import Magics, magics_class, line_magic, cell_magic, line_cell_magic
 from IPython.display import display, HTML
 
-MATCH_TEMPL = '<font color="{0}"><u>{1}</u></font>'
-NOMATCH_TEMPL = '<font color="gray">{0}</font>'
-PATTERN_TEMPL = '<font color="DarkRed"><strong><em>{0}</em></strong></font><br/>\n'
+PATTERN_TEMPL = '<span style="color:DarkGreen; font-weight:bold; font-style:italic">{0}</span><br/>'
+MATCH_TEMPL = '<span style="background:{0}; font-weight:bold">{1}</span>'
+NOMATCH_TEMPL = '<span style="color:gray">{0}</span>'
 
 @magics_class
 class RegexMagic(Magics):
     '''Provide the 'regex' calling point for the magic, and keep track of
     alternating colors while matching.'''
+
+    Colors = ['Pink', 'Yellow']
 
     @line_magic
     def matchfile(self, line, cell=None):
@@ -41,7 +43,7 @@ class RegexMagic(Magics):
     @cell_magic
     def matchlines(self, pattern, text):
         pattern_str = PATTERN_TEMPL.format(pattern)
-        self.this_color, self.next_color = 'DarkGreen', 'DarkBlue'
+        self.this_color, self.next_color = RegexMagic.Colors
         result_str = [self.handle_line(pattern, line) for line in text.split('\n')]
         display(HTML(pattern_str + '<br/>'.join(result_str)))
 
