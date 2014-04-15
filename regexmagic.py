@@ -26,6 +26,10 @@ PATTERN_TEMPL = '<span style="color:DarkGreen; font-weight:bold; font-style:ital
 MATCH_TEMPL = '<span style="background:{0}; font-weight:bold">{1}</span>'
 NOMATCH_TEMPL = '<span style="color:gray">{0}</span>'
 
+
+from IPython.html.widgets import interactive
+from IPython.display import HTML, display
+
 @magics_class
 class RegexMagic(Magics):
     '''Provide the 'regex' calling point for the magic, and keep track of
@@ -40,22 +44,46 @@ class RegexMagic(Magics):
             text = reader.read()
         self.matchlines(pattern, text)
 
+
+    def lmatch(self, text='xxx'):
+        def _local(pattern=''):
+            try :
+                pattern_str = PATTERN_TEMPL.format(pattern)
+                self.this_color, self.next_color = RegexMagic.Colors
+                result_str = [self.handle_line(pattern, line) for line in text.split('\n')]
+                display(HTML(pattern_str + '<br/>'.join(result_str)))
+                #return HTML(pattern_str + '<br/>'.join(result_str))
+            except Exception as e :
+                print 'just got Exception', e
+        return _local
+
+
+    @cell_magic
+    def imatchlines(self, pattern, text):
+        return interactive(self.lmatch(text))
+
     @cell_magic
     def matchlines(self, pattern, text):
         pattern_str = PATTERN_TEMPL.format(pattern)
         self.this_color, self.next_color = RegexMagic.Colors
         result_str = [self.handle_line(pattern, line) for line in text.split('\n')]
         display(HTML(pattern_str + '<br/>'.join(result_str)))
+        return HTML(pattern_str + '<br/>'.join(result_str))
 
     def handle_line(self, pattern, line):
         result = []
         m = re.search(pattern, line)
+        n=0
         while m:
             result.append(NOMATCH_TEMPL.format(line[:m.start()]))
             result.append(MATCH_TEMPL.format(self.this_color, line[m.start():m.end()]))
             line = line[m.end():]
             self.this_color, self.next_color = self.next_color, self.this_color
             m = re.search(pattern, line)
+            n=n+1
+            if n> 100:
+                break
+                print 'more than 100 matches ?'
         else:
             line = NOMATCH_TEMPL.format(line)
         result.append(line)
