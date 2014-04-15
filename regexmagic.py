@@ -46,11 +46,14 @@ class RegexMagic(Magics):
 
 
     def lmatch(self, text='xxx'):
-        def _local(pattern=''):
+        def _local(pattern='', ignore_case=True):
             try :
                 pattern_str = PATTERN_TEMPL.format(pattern)
                 self.this_color, self.next_color = RegexMagic.Colors
-                result_str = [self.handle_line(pattern, line) for line in text.split('\n')]
+                result_str = [
+                        self.handle_line(pattern, line, ignore_case=ignore_case) 
+                        for line in text.split('\n')
+                        ]
                 display(HTML(pattern_str + '<br/>'.join(result_str)))
                 #return HTML(pattern_str + '<br/>'.join(result_str))
             except Exception as e :
@@ -70,9 +73,12 @@ class RegexMagic(Magics):
         display(HTML(pattern_str + '<br/>'.join(result_str)))
         return HTML(pattern_str + '<br/>'.join(result_str))
 
-    def handle_line(self, pattern, line):
+    def handle_line(self, pattern, line, ignore_case=False):
         result = []
-        m = re.search(pattern, line)
+        flags = 0
+        if ignore_case:
+            flags = flags| re.IGNORECASE
+        m = re.search(pattern, line, flags)
         n=0
         while m:
             result.append(NOMATCH_TEMPL.format(line[:m.start()]))
