@@ -22,9 +22,9 @@ import re
 from IPython.core.magic import Magics, magics_class, line_magic, cell_magic, line_cell_magic
 from IPython.display import display, HTML
 
-PATTERN_TEMPL = '<span style="color:DarkGreen; font-weight:bold; font-style:italic">{0}</span><br/>'
-MATCH_TEMPL = '<span style="background:{0}; font-weight:bold">{1}</span>'
-NOMATCH_TEMPL = '<span style="color:gray">{0}</span>'
+PATTERN_TEMPL = '<span style="color:DarkGreen; font-weight:bold; font-style:italic;white-space: pre;">{0}</span><br/>'
+MATCH_TEMPL = '<span style="background:{0}; font-weight:bold;white-space: pre;">{1}</span>'
+NOMATCH_TEMPL = '<span style="color:gray;white-space: pre;">{0}</span>'
 
 
 from IPython.html.widgets import interactive
