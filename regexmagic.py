@@ -64,11 +64,15 @@ class RegexMagic(Magics):
             text = reader.read()
         return pattern, text
 
-    def handle_text(self, pattern='', text='', ignore_case=True):
+    def handle_text(self, pattern='', text='', ignore_case=False, multiline=False, dot_all=False):
         # compile the regular expression, with flags
         flags = 0
         if ignore_case:
             flags = flags | re.IGNORECASE
+        if multiline:
+            flags = flags | re.MULTILINE
+        if dot_all:
+            flags = flags | re.DOTALL
         try:
             compiled_pattern = re.compile(pattern, flags)
 
@@ -79,35 +83,41 @@ class RegexMagic(Magics):
 
         # handle the case where the regular expression is ok
         else:
+            # this keeps track of the colors for alternating matches
             self.this_color, self.next_color = RegexMagic.Colors
-            result_str = []
-            for line in text.split('\n'):
-                result = self.handle_line(compiled_pattern, line)
-                result_str.append(result)
-
+            result_str = self.match(compiled_pattern, text).split('\n')
             pattern_str = PATTERN_TEMPL.format(pattern)
             html_disp = HTML(pattern_str + '<br/>'.join(result_str))
 
         display(html_disp)
         return html_disp
 
-    def handle_line(self, compiled_pattern, line):
+    def match(self, compiled_pattern, line):
         result = []
         m = compiled_pattern.search(line)
-        n=0
+        n = 0
         while m:
-            result.append(NOMATCH_TEMPL.format(line[:m.start()]))
-            result.append(MATCH_TEMPL.format(self.this_color, line[m.start():m.end()]))
-            line = line[m.end():]
+            start = m.start()
+            end = m.end()
+
+            # format all text up to the current match
+            result.append(NOMATCH_TEMPL.format(line[:start]))
+            # format the current match
+            result.append(MATCH_TEMPL.format(self.this_color, line[start:end]))
+
+            # search for the next match
+            line = line[end:]
             self.this_color, self.next_color = self.next_color, self.this_color
             m = compiled_pattern.search(line)
-            n=n+1
-            if n> 100:
+
+            n = n + 1
+            if n > 100:
                 break
                 print 'more than 100 matches ?'
-        else:
-            line = NOMATCH_TEMPL.format(line)
-        result.append(line)
+
+        if len(line) > 0:
+            result.append(NOMATCH_TEMPL.format(line))
+
         return ''.join(result)
 
 def load_ipython_extension(ipython):
