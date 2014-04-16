@@ -34,8 +34,8 @@ from IPython.display import display, HTML, clear_output
 import IPython.html.widgets as widgets
 
 # formatting templates
-PATTERN_TEMPL = '<span style="color:DarkGreen; font-weight:bold; font-style:italic;white-space: pre;">{0}</span><br/>'
-ERROR_TEMPL = '<span style="color:Red; font-weight:bold; font-style:italic;white-space: pre;">{0}</span><br/>'
+PATTERN_TEMPL = '<span style="color:DarkGreen; font-weight:bold; font-style:italic;white-space: pre;">{0}</span><br/><br/>'
+ERROR_TEMPL = '<span style="color:Red; font-weight:bold; font-style:italic;white-space: pre;">{0}</span><br/><br/>'
 MATCH_TEMPL = '<span style="background:{0}; font-weight:bold;white-space: pre;">{1}</span>'
 NOMATCH_TEMPL = '<span style="color:gray;white-space: pre;">{0}</span>'
 
@@ -188,17 +188,17 @@ class RegexMagic(Magics):
 
         # handle the case where the regular expression is invalid
         except:
-            msg = "Invalid regex: %s" % pattern
-            html_disp = HTML(ERROR_TEMPL.format(msg))
+            result_str = NOMATCH_TEMPL.format(text).split('\n')
+            pattern_str = ERROR_TEMPL.format("Invalid regex: %s" % pattern)
 
         # handle the case where the regular expression is ok
         else:
             # this keeps track of the colors for alternating matches
             self.this_color, self.next_color = RegexMagic.Colors
-            result_str = self.match(compiled_pattern, text).split('\n')
             pattern_str = PATTERN_TEMPL.format(pattern)
-            html_disp = HTML(pattern_str + '<br/>'.join(result_str))
+            result_str = self.match(compiled_pattern, text).split('\n')
 
+        html_disp = HTML(pattern_str + '<br/>'.join(result_str))
         display(html_disp)
         return html_disp
 
