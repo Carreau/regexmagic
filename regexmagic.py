@@ -30,7 +30,7 @@ Note: IPython presently interprets {x} to mean 'expand variable x', so
 
 import re
 from IPython.core.magic import Magics, magics_class, line_magic, cell_magic
-from IPython.display import display, HTML, clear_output
+from IPython.display import display, Javascript, HTML, clear_output
 import IPython.html.widgets as widgets
 
 # formatting templates
@@ -247,3 +247,6 @@ class RegexMagic(Magics):
 
 def load_ipython_extension(ipython):
     ipython.register_magics(RegexMagic)
+
+    # display cells as text, not python
+    display(Javascript("IPython.config.cell_magic_highlight.magic_text = {'reg': [/^%{1,3}i?match/]}"))
