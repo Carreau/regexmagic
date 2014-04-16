@@ -34,10 +34,11 @@ from IPython.display import display, HTML, clear_output
 import IPython.html.widgets as widgets
 
 # formatting templates
-PATTERN_TEMPL = '<span style="color:DarkGreen; font-weight:bold; font-style:italic;white-space: pre;">{0}</span><br/><br/>'
-ERROR_TEMPL = '<span style="color:Red; font-weight:bold; font-style:italic;white-space: pre;">{0}</span><br/><br/>'
-MATCH_TEMPL = '<span style="background:{0}; font-weight:bold;white-space: pre;">{1}</span>'
-NOMATCH_TEMPL = '<span style="color:gray;white-space: pre;">{0}</span>'
+PATTERN_TEMPL = '<span style="font-weight: bold">Pattern:</span> <span style="color:DarkGreen; font-weight:bold; font-family: monospace; background-color: lightgray; white-space: pre;">{0}</span>'
+ERROR_TEMPL = '<span style="font-weight: bold">Invalid regex:</span> <span style="color:Red; font-weight:bold; font-family: monospace; background-color: lightgray; white-space: pre;">{0}</span>'
+OPTS_TEMPL = '<span style="font-weight: bold">Options:</span> <span style="font-style:italic;">{0}</span>'
+MATCH_TEMPL = '<span style="background:{0}; font-weight:bold; white-space: pre;">{1}</span>'
+NOMATCH_TEMPL = '<span style="color:gray; white-space: pre;">{0}</span>'
 
 
 @magics_class
@@ -177,19 +178,23 @@ class RegexMagic(Magics):
         '''
         # compile the regular expression, with flags
         flags = 0
+        flag_strs = []
         if ignore_case:
             flags = flags | re.IGNORECASE
+            flag_strs.append("ignore case")
         if multiline:
             flags = flags | re.MULTILINE
+            flag_strs.append("match lines separately")
         if dot_all:
             flags = flags | re.DOTALL
+            flag_strs.append("dot matches all")
         try:
             compiled_pattern = re.compile(pattern, flags)
 
         # handle the case where the regular expression is invalid
         except:
             result_str = NOMATCH_TEMPL.format(text).split('\n')
-            pattern_str = ERROR_TEMPL.format("Invalid regex: %s" % pattern)
+            pattern_str = ERROR_TEMPL.format(pattern)
 
         # handle the case where the regular expression is ok
         else:
@@ -198,7 +203,14 @@ class RegexMagic(Magics):
             pattern_str = PATTERN_TEMPL.format(pattern)
             result_str = self.match(compiled_pattern, text).split('\n')
 
-        html_disp = HTML(pattern_str + '<br/>'.join(result_str))
+        # display what options were picked
+        if len(flag_strs) > 0:
+            flag_str = OPTS_TEMPL.format(", ".join(flag_strs))
+            lines = [pattern_str, flag_str, ''] + result_str
+        else:
+            lines = [pattern_str, ''] + result_str
+
+        html_disp = HTML('<br/>'.join(lines))
         display(html_disp)
         return html_disp
 
