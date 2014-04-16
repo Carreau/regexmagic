@@ -95,10 +95,13 @@ class RegexMagic(Magics):
     def match(self, compiled_pattern, line):
         result = []
         m = compiled_pattern.search(line)
-        n = 0
+
         while m:
             start = m.start()
             end = m.end()
+            # if the match is zero length, stop searching
+            if start == end:
+                break
 
             # format all text up to the current match
             result.append(NOMATCH_TEMPL.format(line[:start]))
@@ -109,11 +112,6 @@ class RegexMagic(Magics):
             line = line[end:]
             self.this_color, self.next_color = self.next_color, self.this_color
             m = compiled_pattern.search(line)
-
-            n = n + 1
-            if n > 100:
-                break
-                print 'more than 100 matches ?'
 
         if len(line) > 0:
             result.append(NOMATCH_TEMPL.format(line))
