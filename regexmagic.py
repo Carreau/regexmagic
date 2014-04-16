@@ -30,8 +30,8 @@ Note: IPython presently interprets {x} to mean 'expand variable x', so
 
 import re
 from IPython.core.magic import Magics, magics_class, line_magic, cell_magic
-from IPython.display import display, HTML
-from IPython.html.widgets import interactive, fixed
+from IPython.display import display, HTML, clear_output
+import IPython.html.widgets as widgets
 
 # formatting templates
 PATTERN_TEMPL = '<span style="color:DarkGreen; font-weight:bold; font-style:italic;white-space: pre;">{0}</span><br/>'
@@ -108,7 +108,55 @@ class RegexMagic(Magics):
 
         '''
 
-        return interactive(self.display_regex, text=fixed(cell))
+        # create a widget for the pattern text box
+        pattern = widgets.TextWidget(
+            description="Pattern:", value='')
+        display(pattern)
+
+        # create widgets for the options
+        ignore_case = widgets.CheckboxWidget(
+            description="Ignore case?", value=False)
+        multiline = widgets.CheckboxWidget(
+            description="Match lines separately?", value=False)
+        dot_all = widgets.CheckboxWidget(
+            description="Dot matches all?", value=False)
+        options = [ignore_case, multiline, dot_all]
+
+        # create a container widget for the options
+        container = widgets.ContainerWidget()
+        display(container)
+        container.remove_class('vbox')
+        container.add_class('hbox')
+
+        # we need to wrap the options in individual container widgets
+        # so that we can set the padding between them
+        children = []
+        for opt in options:
+            wrapper = widgets.ContainerWidget(children=[opt])
+            wrapper.set_css({'padding-right': '2em'})
+            children.append(wrapper)
+        container.children = children
+
+        # these are the widgets whose values we want to watch
+        watched = {
+            'pattern': pattern,
+            'ignore_case': ignore_case,
+            'multiline': multiline,
+            'dot_all': dot_all
+        }
+
+        # update the output as the values are changed
+        def update(*args):
+            kwargs = {'text': cell}
+            for name, widget in watched.iteritems():
+                kwargs[name] = widget.value
+            clear_output(wait=True)
+            self.display_regex(**kwargs)
+
+        for name, widget in watched.iteritems():
+            widget.on_trait_change(update, 'value')
+
+        update()
 
     @cell_magic
     def matchlines(self, line, cell):
