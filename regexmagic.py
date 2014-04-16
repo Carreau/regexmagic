@@ -19,7 +19,7 @@ Note: IPython presently interprets {x} to mean 'expand variable x', so
 # https://github.com/gvwilson/regexmagic/blob/master/LICENSE
 
 import re
-from IPython.core.magic import Magics, magics_class, line_magic, cell_magic, line_cell_magic
+from IPython.core.magic import Magics, magics_class, line_magic, cell_magic
 from IPython.display import display, HTML
 from IPython.html.widgets import interactive, fixed
 from IPython.core.error import UsageError
@@ -38,31 +38,29 @@ class RegexMagic(Magics):
     Colors = ['Pink', 'Yellow']
 
     @line_magic
-    def matchfile(self, line, cell=None):
+    def imatchfile(self, line, cell=None):
         '''Read in a file, and match the regular expression to it.'''
-        pattern, text = self.handle_file(line)
+        filename = line.strip()
+        with open(filename, 'r') as reader:
+            text = reader.read()
+        return self.imatchlines('', text)
+
+    @line_magic
+    def matchfile(self, line, cell=None):
+        '''Read in a file, and match the given regular expression to it.'''
+        filename, pattern = line.split(' ', 1)
+        filename = filename.strip()
+        with open(filename, 'r') as reader:
+            text = reader.read()
         return self.matchlines(pattern, text)
 
     @cell_magic
-    def imatchlines(self, pattern, text):
-        return interactive(self.handle_text, pattern=pattern, text=fixed(text))
+    def imatchlines(self, line, cell):
+        return interactive(self.handle_text, text=fixed(cell))
 
     @cell_magic
-    def matchlines(self, pattern, text):
-        return self.handle_text(pattern=pattern, text=text)
-
-    def handle_file(self, line):
-        parts = [x.strip() for x in line.split(' ', 1)]
-        if len(parts) != 1:
-            raise UsageError(
-                "file matching magic should take one argument, "
-                "the name of the file (you provided %d arguments)"
-                % (len(parts) - 1))
-
-        filename, pattern = parts
-        with open(filename, 'r') as reader:
-            text = reader.read()
-        return pattern, text
+    def matchlines(self, line, cell):
+        self.handle_text(pattern=line, text=cell)
 
     def handle_text(self, pattern='', text='', ignore_case=False, multiline=False, dot_all=False):
         # compile the regular expression, with flags
